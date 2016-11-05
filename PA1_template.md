@@ -6,27 +6,33 @@ output: md_document, html_document
 ---
 
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
 
-```{r libraries, echo=FALSE, message=FALSE, results='hide'}
-x<- c("ggplot2","lubridate", "dplyr", "tidyr", "reshape2","tibble")
-lapply(x, require,character.only=TRUE)
 
-```
+
 #Reading and Processing Data
 Reading the activity file on setting the working directory to the file destination folder
 
-```{r Read Data}
+
+```r
 act<- read.csv("activity.csv")
 ```
+
+```
+## Warning in file(file, "rt"): cannot open file 'activity.csv': No such file
+## or directory
+```
+
+```
+## Error in file(file, "rt"): cannot open the connection
+```
 Tranforming dates to date elements
-```{r}
+
+```r
 act$date<- as.Date(as.character(act$date))
 ```
 Creating by day vector and melting dataset to create daily sums of steps
-```{r}
+
+```r
 act$days<- as.Date(cut(act$date, breaks = "day"))
 act_no_NAs<- na.omit(act)
 bydays<- melt(act_no_NAs, id=c("days","date","interval"))
@@ -35,7 +41,8 @@ bydays<- melt(act_no_NAs, id=c("days","date","interval"))
 
 #Histogram of Total number of steps taken per day
 
-```{r Histogram}
+
+```r
 hist(sum_byday$steps, col="steelblue",
      breaks = c(0,2500, 5000, 7500, 10000,12500,15000,17500,20000,22500), 
      ylim = c(0,20),
@@ -44,19 +51,32 @@ hist(sum_byday$steps, col="steelblue",
      ylab = "Number of Days")
 ```
 
+![plot of chunk Histogram](figure/Histogram-1.png)
+
 Mean and Median of total number of steps taken each day
 
 MEAN
-```{r}
+
+```r
 mean(sum_byday$steps)
 ```
+
+```
+## [1] 10766.19
+```
 MEDIAN
-```{r}
+
+```r
 median(sum_byday$steps)
+```
+
+```
+## [1] 10765
 ```
 #Time series plot of the average number of steps taken
 
-```{r}
+
+```r
 #averaging number of steps for every interval across all days
 avg_byday<- dcast(bydays, interval~variable, mean)
 #plotting time series for average steps taken for every interval
@@ -64,13 +84,25 @@ qplot(data = avg_byday, interval, steps, geom = "line",
       main = "Average Number of Steps Taken for Every Interval \nAcross All days",       ylab = "Avg Steps", xlab = "5 min Intervals")
 ```
 
+![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5-1.png)
+
 Interval with maximum average steps
-```{r}
+
+```r
 avg_byday$interval[which(avg_byday$steps== max(avg_byday$steps))]
 ```
+
+```
+## [1] 835
+```
 Total Number of NAs
-```{r}
+
+```r
 sum(is.na(act$steps))
+```
+
+```
+## [1] 2304
 ```
 
 #Imputing Missing Values (NAs)
@@ -79,7 +111,8 @@ The process used the average of steps by the five minute intervals to impute mis
 a vector of means was created and the script checks within each interval whether ther is a missing value, when positive the script then gets the computed mean from the vector and impputes it for that interval.
 I used ``` replace_na()``` from the dplyr package to do the imputation.
 
-``` {r}
+
+```r
 act1<-as_tibble(act, validate = TRUE)
 act2<-na.omit(act1)
 act3<- melt(act2, id=c("days","date","interval"))
@@ -105,18 +138,37 @@ for ( j in seq_along(intervals)){
 The ouput of this process is in activity, same dimension as the original data with no all NAs imputed
 
 Dimension of data
-```{r}
+
+```r
 dim(activity)
 ```
 
+```
+## [1] 17568     3
+```
+
 Head of dataset
-```{r}
+
+```r
 head(activity)
+```
+
+```
+## # A tibble: 6 × 3
+##       steps       date interval
+##       <dbl>     <date>    <int>
+## 1  1.716981 2012-10-01        0
+## 2  0.000000 2012-10-02        0
+## 3  0.000000 2012-10-03        0
+## 4 47.000000 2012-10-04        0
+## 5  0.000000 2012-10-05        0
+## 6  0.000000 2012-10-06        0
 ```
 
 #Histogram of the total number of steps taken each day after missing values are Imputed
 
-```{r}
+
+```r
 bydays2<- melt(act5, id=c("days","date","interval"))
 sum_byday2<-dcast(bydays2, days~ variable, sum)
 
@@ -129,22 +181,35 @@ hist(sum_byday2$steps, col="red",
      ylab = "Number of Days")
 ```
 
+![plot of chunk unnamed-chunk-11](figure/unnamed-chunk-11-1.png)
+
 Mean and Median of Total Steps per day after NAs imputed
 
 MEAN
-```{r}
+
+```r
 mean(sum_byday2$steps)
 ```
 
+```
+## [1] 10766.19
+```
+
 MEDIAN
-```{r}
+
+```r
 median(sum_byday2$steps)
+```
+
+```
+## [1] 10766.19
 ```
 Only the medians differ. the Median of the second data set has increased and now equals its mean.
 
 
 #Panel plot comparing the average number of steps taken per 5-minute interval across weekdays and weekends
-```{r}
+
+```r
 act5$days_fac<- weekdays(act5$days)
 act5$days_fac<- as.factor(act5$days_fac)
 levels(act5$days_fac)<-list(
@@ -152,6 +217,14 @@ levels(act5$days_fac)<-list(
         "Weekend"=c("Saturday","Sunday"))
 act6<- select(act5, interval,days_fac,steps)
 act6<-melt(act5, id=c("interval","days_fac"))
+```
+
+```
+## Warning: attributes are not identical across measure variables; they will
+## be dropped
+```
+
+```r
 act6<- dcast(act6, interval+days_fac~variable, mean)
 qplot(interval, steps, data = act6, 
       facets = days_fac~.,
@@ -159,4 +232,6 @@ qplot(interval, steps, data = act6,
       xlab = "Interval", ylab = "Avg Steps",
       main = "Average Steps Taken on Weekdays & Weekends \nEvery Five Minute Intervals")
 ```
+
+![plot of chunk unnamed-chunk-14](figure/unnamed-chunk-14-1.png)
 
