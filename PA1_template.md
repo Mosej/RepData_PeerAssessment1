@@ -16,15 +16,6 @@ Reading the activity file on setting the working directory to the file destinati
 ```r
 act<- read.csv("activity.csv")
 ```
-
-```
-## Warning in file(file, "rt"): cannot open file 'activity.csv': No such file
-## or directory
-```
-
-```
-## Error in file(file, "rt"): cannot open the connection
-```
 Tranforming dates to date elements
 
 ```r
